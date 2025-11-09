@@ -85,15 +85,10 @@ WAIT_KEY:
     BEQ JUMP_MISC_TEST
     JMP MAIN_MENU
     
-JUMP_RAM_TEST:
-	JMP DO_RAM_TEST
-JUMP_VIDEO_TEST:
-	JMP DO_VIDEO_TEST
-JUMP_SOUND_TEST:
-	JMP DO_SOUND_TEST
-JUMP_MISC_TEST:
-	JMP DO_MISC_TEST
- 
+JUMP_RAM_TEST: JMP DO_RAM_TEST
+JUMP_VIDEO_TEST: JMP DO_VIDEO_TEST
+JUMP_SOUND_TEST: JMP DO_SOUND_TEST
+JUMP_MISC_TEST:	JMP DO_MISC_TEST
 
 ; ------------------------------
 ; RAM TEST SUBROUTINE
@@ -111,8 +106,8 @@ DO_RAM_TEST:
     
 RAM_LOOP:
     ; RAM test logic placeholder
-   	JSR CHECK_KEYS   ; non-blocking ESC check
-   	JMP RAM_LOOP
+    JSR CHECK_KEYS   ; non-blocking ESC check
+    JMP RAM_LOOP
 
 ; ------------------------------
 ; VIDEO TEST SUBROUTINE
@@ -131,13 +126,10 @@ DO_VIDEO_TEST:
 VIDEO_LOOP:
     ; Video test logic placeholder
     JSR CHECK_KEYS   ; non-blocking ESC check
-	JMP VIDEO_LOOP
+    JMP VIDEO_LOOP
 
 ; ------------------------------
 ; SOUND TEST SUBROUTINE
-; ------------------------------
-; ------------------------------
-; SOUND_TEST LOOP (working)
 ; ------------------------------
 DO_SOUND_TEST:
     JSR CLEAR_SCREEN
@@ -151,10 +143,10 @@ DO_SOUND_TEST:
     JSR PRINT_MESSAGE_FROM_TABLE
 
     ; Initialize SID
-    LDA #0         ; reset gate
-    STA SID_BASE+4 ; voice 1 control register
-    LDA #15        ; volume 15
-    STA SID_BASE+24 ; master volume
+    LDA #0
+    STA SID_BASE+4       ; reset gate on voice 1
+    LDA #15
+    STA SID_BASE+24      ; master volume
 
     ; Initialize notes (C3, E3)
     LDA #$90
@@ -171,59 +163,8 @@ DO_SOUND_TEST:
     STA NOTE_INDEX
 
 SOUND_LOOP:
-    JSR CHECK_KEYS      ; non-blocking check (SPACE = exit)
-
-    LDA NOTE_INDEX
-    BEQ PLAY_NOTE1
-    CMP #1
-    BEQ PLAY_NOTE2
-    LDA #0
-    STA NOTE_INDEX
+    JSR CHECK_KEYS      ; non-blocking key check
     JMP SOUND_LOOP
-
-PLAY_NOTE1:
-    ; Set frequency for voice 1
-    LDA NOTE_LO
-    STA SID_BASE     ; FREQ_LO
-    LDA NOTE_HI
-    STA SID_BASE+1   ; FREQ_HI
-    ; Set control register: gate + triangle
-    LDA #$11
-    STA SID_BASE+4
-    LDA #1
-    STA NOTE_INDEX
-    JSR SHORT_DELAY
-    ; Turn off gate after note
-    LDA #0
-    STA SID_BASE+4
-    JMP SOUND_LOOP
-
-PLAY_NOTE2:
-    ; Set frequency for voice 1
-    LDA NOTE2_LO
-    STA SID_BASE
-    LDA NOTE2_HI
-    STA SID_BASE+1
-    LDA #$11
-    STA SID_BASE+4
-    LDA #0
-    STA NOTE_INDEX
-    JSR SHORT_DELAY
-    LDA #0
-    STA SID_BASE+4
-    JMP SOUND_LOOP
-
-SHORT_DELAY:
-    LDX #$FF
-D1:
-    LDY #$FF
-D2:
-    DEY
-    BNE D2
-    DEX
-    BNE D1
-    RTS
-
 
 ; ------------------------------
 ; MISC TEST SUBROUTINE
@@ -241,7 +182,7 @@ DO_MISC_TEST:
 MISC_LOOP:
     ; Misc test logic placeholder
     JSR CHECK_KEYS   ; non-blocking ESC check
-	JMP MISC_LOOP
+    JMP MISC_LOOP
 
 ; ------------------------------
 ; CLEAR_SCREEN
@@ -381,9 +322,9 @@ MESSAGE_STRING_TABLE:
     .byte <MSG_SOUND,>MSG_SOUND
     .byte <MSG_MISC,>MSG_MISC
     .byte <MSG_RAM_LOOP,>MSG_RAM_LOOP
-	.byte <MSG_VIDEO_LOOP,>MSG_VIDEO_LOOP
+    .byte <MSG_VIDEO_LOOP,>MSG_VIDEO_LOOP
     .byte <MSG_SOUND_LOOP,>MSG_SOUND_LOOP
-	.byte <MSG_MISC_LOOP,>MSG_MISC_LOOP
+    .byte <MSG_MISC_LOOP,>MSG_MISC_LOOP
         
 ; ------------------------------
 ; Strings in ROM
