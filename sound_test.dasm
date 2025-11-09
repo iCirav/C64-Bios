@@ -1,0 +1,81 @@
+DO_SOUND_TEST:
+    JSR CLEAR_SCREEN
+    LDA #6
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    JSR PRINT_CRLF
+
+    LDA #10
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+
+    ; Initialize SID
+    LDA #0
+    STA SID_BASE+4  ; voice 1 control register
+    LDA #15
+    STA SID_BASE+24 ; master volume
+
+    ; Initialize notes
+    LDA #$90
+    STA NOTE_LO
+    LDA #$02
+    STA NOTE_HI
+
+    LDA #$A0
+    STA NOTE2_LO
+    LDA #$02
+    STA NOTE2_HI
+
+    LDA #0
+    STA NOTE_INDEX
+
+SOUND_LOOP:
+    JSR CHECK_KEYS
+
+    LDA NOTE_INDEX
+    BEQ PLAY_NOTE1
+    CMP #1
+    BEQ PLAY_NOTE2
+    LDA #0
+    STA NOTE_INDEX
+    JMP SOUND_LOOP
+
+PLAY_NOTE1:
+    LDA NOTE_LO
+    STA SID_BASE
+    LDA NOTE_HI
+    STA SID_BASE+1
+    LDA #$11
+    STA SID_BASE+4
+    LDA #1
+    STA NOTE_INDEX
+    JSR SHORT_DELAY
+    LDA #0
+    STA SID_BASE+4
+    JMP SOUND_LOOP
+
+PLAY_NOTE2:
+    LDA NOTE2_LO
+    STA SID_BASE
+    LDA NOTE2_HI
+    STA SID_BASE+1
+    LDA #$11
+    STA SID_BASE+4
+    LDA #0
+    STA NOTE_INDEX
+    JSR SHORT_DELAY
+    LDA #0
+    STA SID_BASE+4
+    JMP SOUND_LOOP
+
+SHORT_DELAY:
+    LDX #$FF
+D1:
+    LDY #$FF
+D2:
+    DEY
+    BNE D2
+    DEX
+    BNE D1
+    RTS
