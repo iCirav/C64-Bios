@@ -71,9 +71,7 @@ MAIN_MENU:
     JSR PRINT_CRLF
 
 WAIT_KEY:
-    JSR GET_KEY
-    CMP #ESC_KEY              ; Escape key
-    BEQ MAIN_MENU        ; just redisplay menu
+    JSR GET_KEY ;Blocking key check
 
     CMP #$31          ; '1'
     BEQ JUMP_RAM_TEST
@@ -106,7 +104,7 @@ DO_RAM_TEST:
     
 RAM_LOOP:
     ; RAM test logic placeholder
-    JSR CHECK_KEYS   ; non-blocking ESC check
+    JSR CHECK_KEYS   ; non-blocking key check
     JMP RAM_LOOP
 
 ; ------------------------------
@@ -125,7 +123,7 @@ DO_VIDEO_TEST:
     
 VIDEO_LOOP:
     ; Video test logic placeholder
-    JSR CHECK_KEYS   ; non-blocking ESC check
+    JSR CHECK_KEYS   ; non-blocking key check
     JMP VIDEO_LOOP
 
 ; ------------------------------
@@ -141,26 +139,6 @@ DO_SOUND_TEST:
     LDA #10
     STA MESSAGE_TABLE_INDEX
     JSR PRINT_MESSAGE_FROM_TABLE
-
-    ; Initialize SID
-    LDA #0
-    STA SID_BASE+4       ; reset gate on voice 1
-    LDA #15
-    STA SID_BASE+24      ; master volume
-
-    ; Initialize notes (C3, E3)
-    LDA #$90
-    STA NOTE_LO
-    LDA #$02
-    STA NOTE_HI
-
-    LDA #$A0
-    STA NOTE2_LO
-    LDA #$02
-    STA NOTE2_HI
-
-    LDA #0
-    STA NOTE_INDEX
 
 SOUND_LOOP:
     JSR CHECK_KEYS      ; non-blocking key check
@@ -179,9 +157,10 @@ DO_MISC_TEST:
     LDA #11
     STA MESSAGE_TABLE_INDEX
     JSR PRINT_MESSAGE_FROM_TABLE
+    
 MISC_LOOP:
     ; Misc test logic placeholder
-    JSR CHECK_KEYS   ; non-blocking ESC check
+    JSR CHECK_KEYS   ; non-blocking key check
     JMP MISC_LOOP
 
 ; ------------------------------
