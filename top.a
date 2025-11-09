@@ -1,0 +1,64 @@
+    include "cartheader.dasm"
+    .org $f000          ; Set the start address for the program
+    
+KernelStart:
+    sei                 ; Disable interrupts (disable IRQs)
+    cld                 ; Clear decimal mode (use binary mode)
+
+    ldx #$ff            ; Load X register with $FF
+    txs                 ; Set the stack pointer to $FF (top of RAM)
+    
+    ; Initialize SID channel 1 to make a square wave sound
+    jsr InitSID         ; Initialize SID and play sound
+
+    ; Wait for a while (sound to play)
+    jsr Wait            ; Wait for some time before stopping
+
+    ; Stop the sound by turning off the SID
+    jsr StopSID         ; Turn off SID sound
+    
+    ; Infinite loop to keep the system running
+    jmp KernelStart     ; Stay here forever (until reset or interrupt)
+
+; Initialize SID channel 1 (square wave, frequency, volume)
+InitSID:
+    ; Set the waveform to square wave (bit 0 of $d415)
+    lda #$11            ; Square wave for channel 1 (0b00010001)
+    sta $d404           ; Write to the waveform control register for channel 1
+    
+    ; Set the frequency (high byte) for channel 1 (let's pick a mid-range frequency)
+    lda #$02            ; Frequency high byte (e.g., $0200 for 1kHz)
+    sta $d402           ; Write to frequency high byte register for channel 1
+    
+    lda #$00            ; Frequency low byte (lower 8 bits of frequency)
+    sta $d403           ; Write to frequency low byte register for channel 1
+
+    ; Set the volume (let's choose a moderate volume)
+    lda #$0f            ; Set volume to max for channel 1 (0x0f)
+    sta $d420           ; Write to the volume register for channel 1
+
+    ; Turn on the channel (set bit 0 of $d404)
+    lda $d404
+    ora #$01            ; Set bit 0 to turn on sound for channel 1
+    sta $d404
+
+    ror                 ; Return from subroutine
+
+; Wait for a while (simple loop)
+Wait:
+    ldx #$ff            ; Load X with a value for the wait loop
+WaitLoop:
+    dex                 ; Decrement X
+    bne WaitLoop        ; Repeat until X = 0
+    ror                 ; Return from subroutine
+
+; Stop SID sound (turn off the SID chip)
+StopSID:
+    lda $d404
+    and #$fe            ; Clear bit 0 to turn off sound for channel 1
+    sta $d404
+    ror                 ; Return from subroutine
+
+; C64-specific code to initialize the screen and I/O
+    .org $fffc           ; Set up the reset vector (the C64 will jump to this address after reset)
+    .word KernelStart    ; Point to the KernelStart label (address to start execution)
