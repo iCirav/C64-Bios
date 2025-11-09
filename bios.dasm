@@ -8,6 +8,12 @@
 ; ------------------------------
 PTR    			= $FB   ; zero-page pointer for string
 MESSAGE_TABLE_INDEX	= $FD	; zero-page variable to hold message index
+NOTE_LO      		= $F0
+NOTE_HI      		= $F1
+NOTE2_LO     		= $F2
+NOTE2_HI     		= $F3
+NOTE_INDEX   		= $F4
+SID_BASE     		= $D400
 
 ; ------------------------------
 ; Constants
@@ -70,15 +76,24 @@ WAIT_KEY:
     BEQ MAIN_MENU        ; just redisplay menu
 
     CMP #$31          ; '1'
-    BEQ DO_RAM_TEST
+    BEQ JUMP_RAM_TEST
     CMP #$32          ; '2'
-    BEQ DO_VIDEO_TEST
+    BEQ JUMP_VIDEO_TEST
     CMP #$33          ; '3'
-    BEQ DO_SOUND_TEST
+    BEQ JUMP_SOUND_TEST
     CMP #$34          ; '4'
-    BEQ DO_MISC_TEST
-
-    JMP MAIN_MENU 
+    BEQ JUMP_MISC_TEST
+    JMP MAIN_MENU
+    
+JUMP_RAM_TEST:
+	JMP DO_RAM_TEST
+JUMP_VIDEO_TEST:
+	JMP DO_VIDEO_TEST
+JUMP_SOUND_TEST:
+	JMP DO_SOUND_TEST
+JUMP_MISC_TEST:
+	JMP DO_MISC_TEST
+ 
 
 ; ------------------------------
 ; RAM TEST SUBROUTINE
@@ -121,6 +136,9 @@ VIDEO_LOOP:
 ; ------------------------------
 ; SOUND TEST SUBROUTINE
 ; ------------------------------
+; ------------------------------
+; SOUND_TEST LOOP (working)
+; ------------------------------
 DO_SOUND_TEST:
     JSR CLEAR_SCREEN
     LDA #6
@@ -131,11 +149,81 @@ DO_SOUND_TEST:
     LDA #10
     STA MESSAGE_TABLE_INDEX
     JSR PRINT_MESSAGE_FROM_TABLE
-    
+
+    ; Initialize SID
+    LDA #0         ; reset gate
+    STA SID_BASE+4 ; voice 1 control register
+    LDA #15        ; volume 15
+    STA SID_BASE+24 ; master volume
+
+    ; Initialize notes (C3, E3)
+    LDA #$90
+    STA NOTE_LO
+    LDA #$02
+    STA NOTE_HI
+
+    LDA #$A0
+    STA NOTE2_LO
+    LDA #$02
+    STA NOTE2_HI
+
+    LDA #0
+    STA NOTE_INDEX
+
 SOUND_LOOP:
-    ; Sound test logic placeholder
-    JSR CHECK_KEYS   ; non-blocking ESC check
-	JMP SOUND_LOOP
+    JSR CHECK_KEYS      ; non-blocking check (SPACE = exit)
+
+    LDA NOTE_INDEX
+    BEQ PLAY_NOTE1
+    CMP #1
+    BEQ PLAY_NOTE2
+    LDA #0
+    STA NOTE_INDEX
+    JMP SOUND_LOOP
+
+PLAY_NOTE1:
+    ; Set frequency for voice 1
+    LDA NOTE_LO
+    STA SID_BASE     ; FREQ_LO
+    LDA NOTE_HI
+    STA SID_BASE+1   ; FREQ_HI
+    ; Set control register: gate + triangle
+    LDA #$11
+    STA SID_BASE+4
+    LDA #1
+    STA NOTE_INDEX
+    JSR SHORT_DELAY
+    ; Turn off gate after note
+    LDA #0
+    STA SID_BASE+4
+    JMP SOUND_LOOP
+
+PLAY_NOTE2:
+    ; Set frequency for voice 1
+    LDA NOTE2_LO
+    STA SID_BASE
+    LDA NOTE2_HI
+    STA SID_BASE+1
+    LDA #$11
+    STA SID_BASE+4
+    LDA #0
+    STA NOTE_INDEX
+    JSR SHORT_DELAY
+    LDA #0
+    STA SID_BASE+4
+    JMP SOUND_LOOP
+
+SHORT_DELAY:
+    LDX #$FF
+D1:
+    LDY #$FF
+D2:
+    DEY
+    BNE D2
+    DEX
+    BNE D1
+    RTS
+
 
 ; ------------------------------
 ; MISC TEST SUBROUTINE
