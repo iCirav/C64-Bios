@@ -1,0 +1,126 @@
+; ==============================
+; hello_cart.dasm - C64 Cartridge Example
+; ==============================
+
+	include "cartheader.dasm"
+
+; ------------------------------
+; Zero-page variable
+; ------------------------------
+PTR     = $FB      		; zero-page pointer for string
+MESSAGE_TABLE_INDEX = $FD	; zero-page variable to hold message index
+
+; ------------------------------
+; ROM start
+; ------------------------------
+	.org $8025      ; cartridge ROM start
+
+START:
+	LDX #$FF
+	TXS
+	JSR INIT
+        
+	; PRINT PRESS A NUMBER MESSAGE, THEN CRLF
+	LDA #3
+	STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+        JSR PRINT_CRLF
+
+; ------------------------------
+; void Main()
+; ------------------------------
+MAIN:
+    	JSR GET_KEY                     ; wait for keypress
+    	CMP #$31                        ; '1'
+   	BCC MAIN
+    	CMP #$34                        ; '4'
+    	BCS MAIN
+   	SEC
+    	SBC #$31                        ; convert '1'-'4' -> 0-3
+    	STA MESSAGE_TABLE_INDEX
+    	JSR PRINT_MESSAGE_FROM_TABLE
+    	JSR PRINT_CRLF
+
+    	JMP MAIN                   ; repeat
+
+RAM_TEST:
+	; Example usage: print first string
+	LDA #0
+	STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+        JSR PRINT_CRLF
+        
+        JMP MAIN
+
+
+; ------------------------------
+; GET_KEY
+; Waits for a keypress and returns ASCII in A
+; ------------------------------
+GET_KEY:
+	JSR $FFE4       ; GETIN (wait for key)
+	RTS
+    
+; ------------------------------
+; INIT subroutine
+; ------------------------------
+INIT:
+	LDA #0
+	TAX
+	TAY
+	CLC
+	CLD
+	CLI
+	CLV
+	RTS
+
+; ------------------------------
+; PRINT_MESSAGE subroutine
+; Prints a null-terminated message from the table on demand
+; Input: MSG_IDX = message index (0-based)
+; ------------------------------
+PRINT_MESSAGE_FROM_TABLE:
+	LDA MESSAGE_TABLE_INDEX
+	ASL               ; multiply by 2 (2 bytes per pointer)
+	TAX                  ; store offset in X
+
+	; Load pointer from table into PTR
+    	LDA MESSAGE_STRING_TABLE,X
+    	STA PTR
+    	LDA MESSAGE_STRING_TABLE+1,X
+    	STA PTR+1
+
+    	; Print the string
+   	LDY #0
+PRINT_LOOP:
+    	LDA (PTR),Y
+    	BEQ PRINT_EXIT
+    	JSR $FFD2           ; CHROUT
+    	INY
+	JMP PRINT_LOOP
+
+PRINT_EXIT:
+	RTS
+
+PRINT_CRLF:
+    ; Print carriage return + line feed
+    LDA #13         ; CHR$(13) - carriage return
+    JSR $FFD2
+    RTS
+
+; ------------------------------
+; String pointer table
+; ------------------------------
+MESSAGE_STRING_TABLE:
+	.byte <MESSAGE,>MESSAGE
+	.byte <ANOTHERSTRING,>ANOTHERSTRING
+	.byte <THIRDSTRING,>THIRDSTRING
+	.byte <STRINGa,>STRINGa
+        
+; ------------------------------
+; Strings in ROM
+; ------------------------------
+MESSAGE:        .byte "HELLO WORLD!",0
+ANOTHERSTRING:  .byte "TEST!",0
+THIRDSTRING:    .byte "C64 IS FUN!",0
+STRINGa:	.byte "PRESS A NUMBER: ",0
