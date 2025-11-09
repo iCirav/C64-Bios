@@ -1,0 +1,15 @@
+| CHR$(x)    | Description                                                                             |
+| ---------- | --------------------------------------------------------------------------------------- |
+| 0          | Null (used as string terminator)                                                        |
+| 1–31       | Control codes (various cursor and screen functions in PETSCII, often ignored on screen) |
+| 3          | Inverse on / off (toggle reverse video)                                                 |
+| 4–12       | Cursor/graphics control (mostly ignored in basic CHR$(x) printing)                      |
+| 13         | **Carriage Return (CR)** – moves cursor to start of line                                |
+| 10         | Line feed (LF) – moves down one line in some contexts, often ignored                    |
+| 147        | **Clear screen** (CLS)                                                                  |
+| 145        | Not really LF; often misused.                                                           |
+| 5–8, 14–31 | Misc PETSCII control codes (bell, cursor movement, etc.)                                |
+| 32–127     | Printable standard ASCII (uppercase letters, digits, punctuation)                       |
+| 128–159    | Lowercase / graphics variants in PETSCII uppercase/graphics mode                        |
+| 160–223    | Uppercase / graphics variants in PETSCII lowercase/graphics mode                        |
+| 224–255    | More graphical symbols / reverse characters in PETSCII                                  |
