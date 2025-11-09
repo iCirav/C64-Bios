@@ -1,0 +1,65 @@
+.include "ram_test.dasm"
+.include "video_test.dasm"
+.include "sound_test.dasm"
+.include "misc_test.dasm"
+
+; ------------------------------
+; MAIN_MENU
+; ------------------------------
+MAIN_MENU:
+    JSR CLEAR_SCREEN
+
+    LDA #2
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+
+    LDA #3
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+
+    JSR PRINT_CRLF
+
+    LDA #4
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+
+    LDA #5
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+
+    LDA #6
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+
+    LDA #7
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+
+WAIT_KEY:
+    JSR GET_KEY
+    CMP #ESC_KEY
+    BEQ MAIN_MENU
+
+    CMP #$31 ; '1'
+    BEQ JUMP_RAM_TEST
+    CMP #$32 ; '2'
+    BEQ JUMP_VIDEO_TEST
+    CMP #$33 ; '3'
+    BEQ JUMP_SOUND_TEST
+    CMP #$34 ; '4'
+    BEQ JUMP_MISC_TEST
+    JMP MAIN_MENU
+
+; ------------------------------
+; Branch to test routines
+; ------------------------------
+JUMP_RAM_TEST:   JMP DO_RAM_TEST
+JUMP_VIDEO_TEST: JMP DO_VIDEO_TEST
+JUMP_SOUND_TEST: JMP DO_SOUND_TEST
+JUMP_MISC_TEST:  JMP DO_MISC_TEST
