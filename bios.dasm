@@ -1,14 +1,20 @@
 ; ==============================
-; hello_cart.dasm - C64 Cartridge Example
+; BIOS.dasm - C64 Test Cartridge
 ; ==============================
-
 	include "cartheader.dasm"
 
 ; ------------------------------
 ; Zero-page variable
 ; ------------------------------
-PTR     = $FB      		; zero-page pointer for string
-MESSAGE_TABLE_INDEX = $FD	; zero-page variable to hold message index
+PTR    			= $FB   ; zero-page pointer for string
+MESSAGE_TABLE_INDEX	= $FD	; zero-page variable to hold message index
+
+; ------------------------------
+; Constants
+; ------------------------------
+ESC_KEY = $1B      ; ASCII 27
+CR      = $0D      ; Carriage Return
+LF      = $0A      ; Line Feed (optional)
 
 ; ------------------------------
 ; ROM start
@@ -19,48 +25,215 @@ START:
 	LDX #$FF
 	TXS
 	JSR INIT
-        
-	; PRINT PRESS A NUMBER MESSAGE, THEN CRLF
-	LDA #3
-	STA MESSAGE_TABLE_INDEX
-	JSR PRINT_MESSAGE_FROM_TABLE
-        JSR PRINT_CRLF
 
 ; ------------------------------
 ; void Main()
 ; ------------------------------
-MAIN:
-    	JSR GET_KEY                     ; wait for keypress
-    	CMP #$31                        ; '1'
-   	BCC MAIN
-    	CMP #$34                        ; '4'
-    	BCS MAIN
-   	SEC
-    	SBC #$31                        ; convert '1'-'4' -> 0-3
-    	STA MESSAGE_TABLE_INDEX
-    	JSR PRINT_MESSAGE_FROM_TABLE
-    	JSR PRINT_CRLF
-
-    	JMP MAIN                   ; repeat
-
-RAM_TEST:
-	; Example usage: print first string
-	LDA #0
-	STA MESSAGE_TABLE_INDEX
-	JSR PRINT_MESSAGE_FROM_TABLE
-        JSR PRINT_CRLF
+MAIN_MENU:
+    ; Show menu prompt
+    JSR CLEAR_SCREEN
+    LDA #2
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    
+    LDA #3
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    
+    JSR PRINT_CRLF
         
-        JMP MAIN
+    LDA #4
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    
+    LDA #5
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+        
+    LDA #6
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    
+    LDA #7
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
 
+WAIT_KEY:
+    JSR GET_KEY
+    CMP #ESC_KEY              ; Escape key
+    BEQ MAIN_MENU        ; just redisplay menu
+
+    CMP #$31          ; '1'
+    BEQ DO_RAM_TEST
+    CMP #$32          ; '2'
+    BEQ DO_VIDEO_TEST
+    CMP #$33          ; '3'
+    BEQ DO_SOUND_TEST
+    CMP #$34          ; '4'
+    BEQ DO_MISC_TEST
+
+    JMP MAIN_MENU 
 
 ; ------------------------------
-; GET_KEY
+; RAM TEST SUBROUTINE
+; ------------------------------
+DO_RAM_TEST:
+    JSR CLEAR_SCREEN
+    LDA #4
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    JSR PRINT_CRLF
+    LDA #8
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    
+RAM_LOOP:
+    ; RAM test logic placeholder
+   	JSR CHECK_KEYS   ; non-blocking ESC check
+   	JMP RAM_LOOP
+
+; ------------------------------
+; VIDEO TEST SUBROUTINE
+; ------------------------------
+DO_VIDEO_TEST:
+    JSR CLEAR_SCREEN
+    LDA #5
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    JSR PRINT_CRLF
+    LDA #9
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    
+VIDEO_LOOP:
+    ; Video test logic placeholder
+    JSR CHECK_KEYS   ; non-blocking ESC check
+	JMP VIDEO_LOOP
+
+; ------------------------------
+; SOUND TEST SUBROUTINE
+; ------------------------------
+DO_SOUND_TEST:
+    JSR CLEAR_SCREEN
+    LDA #6
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    JSR PRINT_CRLF
+    LDA #10
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    
+SOUND_LOOP:
+    ; Sound test logic placeholder
+    JSR CHECK_KEYS   ; non-blocking ESC check
+	JMP SOUND_LOOP
+
+; ------------------------------
+; MISC TEST SUBROUTINE
+; ------------------------------
+DO_MISC_TEST:
+    JSR CLEAR_SCREEN
+    LDA #7
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_CRLF
+    JSR PRINT_CRLF
+    LDA #11
+    STA MESSAGE_TABLE_INDEX
+    JSR PRINT_MESSAGE_FROM_TABLE
+MISC_LOOP:
+    ; Misc test logic placeholder
+    JSR CHECK_KEYS   ; non-blocking ESC check
+	JMP MISC_LOOP
+
+; ------------------------------
+; CLEAR_SCREEN
+; Clears the screen and resets cursor
+; ------------------------------
+CLEAR_SCREEN:
+    JSR $E544       ; CINT - Initialize screen & cursor
+
+    LDY #0          ; Y = row counter (0..24)
+CLEAR_ROWS:
+    LDX #0          ; X = column counter (0..39)
+CLEAR_COLS:
+    LDA #32         ; ASCII space
+    STA $0400,X     ; store to screen memory (adjust offset later)
+    LDA #6          ; light blue
+    STA $D800,X     ; store color
+    INX
+    CPX #40
+    BNE CLEAR_COLS
+
+    ; advance pointers by 40 for next row
+    CLC
+    LDA $0400
+    ADC #40
+    STA $0400
+    LDA $D800
+    ADC #40
+    STA $D800
+
+    INY
+    CPY #25
+    BNE CLEAR_ROWS
+    RTS
+
+; ------------------------------
+; GET_KEY (blocking)
 ; Waits for a keypress and returns ASCII in A
 ; ------------------------------
 GET_KEY:
-	JSR $FFE4       ; GETIN (wait for key)
+GET_WAIT:
+	JSR $FFE4       ; GETIN (non-blocking)
+	BEQ GET_WAIT    ; loop until key is pressed
 	RTS
-    
+
+; ------------------------------
+; CHECK_KEYS (non-blocking)
+; If ESC pressed, jumps to MAIN_MENU
+; ------------------------------
+CHECK_KEYS:
+    LDA $C6      ; keyboard buffer count
+    BEQ NO_KEY
+    JSR $FFE4    ; read key
+    CMP #ESC_KEY
+    BEQ ESC_PRESSED
+    CMP #$85
+    BEQ F1_PRESSED
+    CMP #$86
+    BEQ F2_PRESSED
+    CMP #$87
+    BEQ F3_PRESSED
+    CMP #$88
+   	BEQ F4_PRESSED
+    CMP #$20
+    BEQ SPACE_PRESSED
+NO_KEY:
+	RTS
+
+ESC_PRESSED:
+	JMP MAIN_MENU
+F1_PRESSED:
+	RTS
+F2_PRESSED:
+	RTS
+F3_PRESSED:
+	RTS
+F4_PRESSED:
+	RTS
+SPACE_PRESSED:
+	JMP MAIN_MENU
+
 ; ------------------------------
 ; INIT subroutine
 ; ------------------------------
@@ -81,8 +254,8 @@ INIT:
 ; ------------------------------
 PRINT_MESSAGE_FROM_TABLE:
 	LDA MESSAGE_TABLE_INDEX
-	ASL               ; multiply by 2 (2 bytes per pointer)
-	TAX                  ; store offset in X
+	ASL	; multiply by 2 (2 bytes per pointer)
+	TAX
 
 	; Load pointer from table into PTR
     	LDA MESSAGE_STRING_TABLE,X
@@ -90,21 +263,20 @@ PRINT_MESSAGE_FROM_TABLE:
     	LDA MESSAGE_STRING_TABLE+1,X
     	STA PTR+1
 
-    	; Print the string
-   	LDY #0
+    ; Print the string
+   		LDY #0
 PRINT_LOOP:
-    	LDA (PTR),Y
-    	BEQ PRINT_EXIT
-    	JSR $FFD2           ; CHROUT
-    	INY
+    LDA (PTR),Y
+    BEQ PRINT_EXIT
+    JSR $FFD2           ; CHROUT
+    INY
 	JMP PRINT_LOOP
 
 PRINT_EXIT:
 	RTS
 
 PRINT_CRLF:
-    ; Print carriage return + line feed
-    LDA #13         ; CHR$(13) - carriage return
+    LDA #CR         
     JSR $FFD2
     RTS
 
@@ -112,15 +284,31 @@ PRINT_CRLF:
 ; String pointer table
 ; ------------------------------
 MESSAGE_STRING_TABLE:
-	.byte <MESSAGE,>MESSAGE
-	.byte <ANOTHERSTRING,>ANOTHERSTRING
-	.byte <THIRDSTRING,>THIRDSTRING
-	.byte <STRINGa,>STRINGa
+    .byte <MSG_NULL,>MSG_NULL
+    .byte <MSG_TEST,>MSG_TEST
+    .byte <MSG_MAIN_MENUa,>MSG_MAIN_MENUa
+    .byte <MSG_MAIN_MENUb,>MSG_MAIN_MENUb
+    .byte <MSG_RAM,>MSG_RAM
+    .byte <MSG_VIDEO,>MSG_VIDEO
+    .byte <MSG_SOUND,>MSG_SOUND
+    .byte <MSG_MISC,>MSG_MISC
+    .byte <MSG_RAM_LOOP,>MSG_RAM_LOOP
+	.byte <MSG_VIDEO_LOOP,>MSG_VIDEO_LOOP
+    .byte <MSG_SOUND_LOOP,>MSG_SOUND_LOOP
+	.byte <MSG_MISC_LOOP,>MSG_MISC_LOOP
         
 ; ------------------------------
 ; Strings in ROM
 ; ------------------------------
-MESSAGE:        .byte "HELLO WORLD!",0
-ANOTHERSTRING:  .byte "TEST!",0
-THIRDSTRING:    .byte "C64 IS FUN!",0
-STRINGa:	.byte "PRESS A NUMBER: ",0
+MSG_NULL:       .byte "",0
+MSG_TEST:       .byte "TEST!",0
+MSG_MAIN_MENUa: .byte "SYSTEM TEST",0
+MSG_MAIN_MENUb: .byte "PRESS 1-4 TO SELECT A TEST ",0
+MSG_RAM:        .byte "1: RAM TEST",0
+MSG_VIDEO:      .byte "2: VIDEO TEST",0
+MSG_SOUND:      .byte "3: SOUND TEST",0
+MSG_MISC:       .byte "4: MISC TEST",0
+MSG_RAM_LOOP:   .byte "RAM TEST RUNNING...   (SPACE TO EXIT)",0
+MSG_VIDEO_LOOP: .byte "VIDEO TEST RUNNING... (SPACE TO EXIT)",0
+MSG_SOUND_LOOP: .byte "SOUND TEST RUNNING... (SPACE TO EXIT)",0
+MSG_MISC_LOOP:  .byte "MISC TEST RUNNING...  (SPACE TO EXIT)",0
