@@ -123,9 +123,30 @@ ADDRESS_PASS:
 	LDA #12 ;PRINT ADDRESS MESSAGE
         STA MESSAGE_TABLE_INDEX
 	JSR PRINT_MESSAGE_FROM_TABLE
-	
-	;LOGIC TO PRINT RAM ADDRESS
+        
+	;Print a space
+        LDA #32
+        JSR PRINT_CHAR
 
+	;Print ADDRESS: $xxxx
+	PLA
+	TAY
+	LDA #<$0800
+	CLC
+	TYA
+	ADC #<$0800
+	STA PTR
+	LDA #>$0800
+	ADC #0
+	STA PTR+1
+	TYA
+	PHA
+    	JSR PRINT_ADDRESS
+
+	;Print a space
+        LDA #32
+        JSR PRINT_CHAR
+        
 	LDA #13 ;PRINT PASS MESSAGE
         STA MESSAGE_TABLE_INDEX
 	JSR PRINT_MESSAGE_FROM_TABLE
@@ -406,6 +427,67 @@ PRINT_ONES:
     ADC #48
     JSR PRINT_CHAR
     RTS
+
+; ===================================================
+; PRINT_ADDRESS
+; Prints 16-bit address in PTR ($FB/$FC) as "$HHLL"
+; ===================================================
+
+PRINT_ADDRESS:
+    PHA                 ; Save A
+    TXA
+    PHA                 ; Save X
+    TYA
+    PHA                 ; Save Y
+
+    LDA #$24            ; ASCII '$'
+    JSR $FFD2           ; Print '$'
+
+    LDA PTR+1           ; High byte
+    JSR PRINT_HEX_BYTE
+
+    LDA PTR             ; Low byte
+    JSR PRINT_HEX_BYTE
+
+    PLA                 ; Restore Y
+    TAY
+    PLA                 ; Restore X
+    TAX
+    PLA                 ; Restore A
+    RTS
+
+
+; ===================================================
+; PRINT_HEX_BYTE
+; Prints one byte (in A) as two hex digits
+; ===================================================
+PRINT_HEX_BYTE:
+    PHA                 ; Save A
+    LSR 
+    LSR 
+    LSR 
+    LSR                ; Move high nibble to low bits
+    JSR PRINT_HEX_DIGIT
+    PLA                 ; Get original A
+    AND #$0F            ; Mask low nibble
+    JSR PRINT_HEX_DIGIT
+    RTS
+
+
+; ===================================================
+; PRINT_HEX_DIGIT
+; Converts nibble in A to ASCII 0–F and prints it
+; ===================================================
+PRINT_HEX_DIGIT:
+    AND #$0F
+    CMP #$0A
+    BCC PRINT_NUM
+    ADC #$06            ; For A–F, add 6 after compare trick
+PRINT_NUM:
+    ADC #$30            ; Convert to ASCII
+    JSR $FFD2           ; Print it
+    RTS
+
 
 ; ------------------------------
 ; String pointer table
