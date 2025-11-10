@@ -95,18 +95,74 @@ DO_RAM_TEST:
     JSR CLEAR_SCREEN
     LDA #4
     STA MESSAGE_TABLE_INDEX
-    JSR PRINT_MESSAGE_FROM_TABLE
-    JSR PRINT_CRLF
-    JSR PRINT_CRLF
-    LDA #8
-    STA MESSAGE_TABLE_INDEX
-    JSR PRINT_MESSAGE_FROM_TABLE
+    JSR PRINT_MESSAGE_FROM_TABLE ; PRINT 1: RAM TEST
     
-RAM_LOOP:
-    ; RAM test logic placeholder
-    JSR CHECK_KEYS   ; non-blocking key check
-    JMP RAM_LOOP
+    JSR PRINT_CRLF
+    JSR PRINT_CRLF
+    
+    LDA #8
+    STA MESSAGE_TABLE_INDEX 
+    JSR PRINT_MESSAGE_FROM_TABLE ; PRINT RAM TEST RUNNING
+    
+    JSR PRINT_CRLF
+       
+    LDY #0 ;RAM OFFSET
 
+RAM_LOOP:
+	JSR CHECK_KEYS
+	LDA #22 ; TEST VALUE
+	STA $0800,Y
+	LDA $0800,Y	; We wrote #22 to $0800+Y, and read it back
+	CMP #22		; Is A == #22?
+	BEQ ADDRESS_PASS
+        JMP ADDRESS_FAIL
+        
+ADDRESS_PASS:
+        TYA
+	PHA
+	LDA #12 ;PRINT ADDRESS MESSAGE
+        STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+	
+	;LOGIC TO PRINT RAM ADDRESS
+
+	LDA #13 ;PRINT PASS MESSAGE
+        STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+	JSR PRINT_CRLF
+	JMP RAM_TEST_IS_DONE
+	
+ADDRESS_FAIL:
+        TYA
+	PHA
+	LDA #12 ;PRINT ADDRESS MESSAGE
+        STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+	
+	;LOGIC TO PRINT RAM ADDRESS
+
+	LDA #14 ;PRINT FAIL MESSAGE
+        STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+	JSR PRINT_CRLF
+	JMP RAM_TEST_IS_DONE
+
+RAM_TEST_IS_DONE:
+	PLA
+        TAY
+        INY
+	CPY #16		;Only doing 16 for now, will change later to full range
+	BNE RAM_LOOP    ;Leave loop if true
+
+RAM_DONE:
+	JSR PRINT_CRLF
+	LDA #15 ;PRINT FINISHED MESSAGE
+        STA MESSAGE_TABLE_INDEX
+	JSR PRINT_MESSAGE_FROM_TABLE
+	JSR PRINT_CRLF
+        JSR WAIT_KEY_PRESSED
+        JMP MAIN_MENU
+        
 ; ------------------------------
 ; VIDEO TEST SUBROUTINE
 ; ------------------------------
@@ -206,6 +262,15 @@ GET_WAIT:
 	BEQ GET_WAIT    ; loop until key is pressed
 	RTS
 
+
+; ------------------------------
+; HALT UNTIL KEY PRESSED
+; ------------------------------
+WAIT_KEY_PRESSED:
+    JSR $FFE4       ; CALL GETIN to check the keyboard buffer
+    BEQ WAIT_KEY_PRESSED ; If no key is pressed, loop and wait
+    RTS             ; If a key is pressed, return from subroutine
+    
 ; ------------------------------
 ; CHECK_KEYS (non-blocking)
 ; If ESC pressed, jumps to MAIN_MENU
@@ -223,7 +288,7 @@ CHECK_KEYS:
     CMP #$87
     BEQ F3_PRESSED
     CMP #$88
-   	BEQ F4_PRESSED
+    BEQ F4_PRESSED
     CMP #$20
     BEQ SPACE_PRESSED
 NO_KEY:
@@ -272,7 +337,8 @@ PRINT_MESSAGE_FROM_TABLE:
     	STA PTR+1
 
     ; Print the string
-   		LDY #0
+   	LDY #0
+        
 PRINT_LOOP:
     LDA (PTR),Y
     BEQ PRINT_EXIT
@@ -288,27 +354,84 @@ PRINT_CRLF:
     JSR $FFD2
     RTS
 
+PRINT_CHAR:
+    JSR $FFD2         ; Call the CHROUT function (prints the character in A)
+    RTS
+
+; ----------------------------
+; PRINT_DECIMAL
+; Input: A = value to print (0-255)
+; Clobbers: X, Y, A
+; ----------------------------
+PRINT_DECIMAL:
+    LDX #0          ; X = digit counter
+    LDY #0          ; Y = temporary
+
+    ; Divide value by 100 for hundreds digit
+    LDA VALUE       ; VALUE is the variable to print
+    SEC
+    SBC #0          ; Just make sure carry is set properly
+    LDX #0
+
+    ; hundreds
+    LDA VALUE
+    CMP #100
+    BCC PRINT_TENS  ; skip if < 100
+    SBC #100
+    STA VALUE
+    LDA #49
+    JSR PRINT_CHAR
+    JMP PRINT_TENS
+
+PRINT_TENS:
+    LDA VALUE
+    CMP #10
+    BCC PRINT_ONES
+    LDX #0
+LOOP_TENS:
+    SEC
+    SBC #10
+    INX
+    BCS LOOP_TENS
+    INX
+    STX VALUE_TENS ; Save tens digit count
+    LDA VALUE_TENS
+    CLC
+    ADC #48
+    JSR PRINT_CHAR
+
+PRINT_ONES:
+    LDA VALUE
+    CLC
+    ADC #48
+    JSR PRINT_CHAR
+    RTS
+
 ; ------------------------------
 ; String pointer table
 ; ------------------------------
 MESSAGE_STRING_TABLE:
-    .byte <MSG_NULL,>MSG_NULL
-    .byte <MSG_TEST,>MSG_TEST
-    .byte <MSG_MAIN_MENUa,>MSG_MAIN_MENUa
-    .byte <MSG_MAIN_MENUb,>MSG_MAIN_MENUb
-    .byte <MSG_RAM,>MSG_RAM
-    .byte <MSG_VIDEO,>MSG_VIDEO
-    .byte <MSG_SOUND,>MSG_SOUND
-    .byte <MSG_MISC,>MSG_MISC
-    .byte <MSG_RAM_LOOP,>MSG_RAM_LOOP
-    .byte <MSG_VIDEO_LOOP,>MSG_VIDEO_LOOP
-    .byte <MSG_SOUND_LOOP,>MSG_SOUND_LOOP
-    .byte <MSG_MISC_LOOP,>MSG_MISC_LOOP
-        
+    .byte <MSG_NULL,>MSG_NULL			; 0
+    .byte <MSG_TEST,>MSG_TEST			; 1
+    .byte <MSG_MAIN_MENUa,>MSG_MAIN_MENUa	; 2
+    .byte <MSG_MAIN_MENUb,>MSG_MAIN_MENUb	; 3
+    .byte <MSG_RAM,>MSG_RAM			; 4
+    .byte <MSG_VIDEO,>MSG_VIDEO			; 5
+    .byte <MSG_SOUND,>MSG_SOUND			; 6
+    .byte <MSG_MISC,>MSG_MISC			; 7
+    .byte <MSG_RAM_LOOP,>MSG_RAM_LOOP		; 8
+    .byte <MSG_VIDEO_LOOP,>MSG_VIDEO_LOOP	; 9
+    .byte <MSG_SOUND_LOOP,>MSG_SOUND_LOOP	; 10
+    .byte <MSG_MISC_LOOP,>MSG_MISC_LOOP		; 11
+    .byte <MSG_RAM_ADDRESS,>MSG_RAM_ADDRESS	; 12
+    .byte <MSG_TEST_PASS,>MSG_TEST_PASS		; 13
+    .byte <MSG_TEST_FAIL,>MSG_TEST_FAIL		; 14
+    .byte <MSG_RAM_TEST_DONE,>MSG_RAM_TEST_DONE		; 15
+
 ; ------------------------------
 ; Strings in ROM
 ; ------------------------------
-MSG_NULL:       .byte "",0
+MSG_NULL:       .byte "DEBUG",0
 MSG_TEST:       .byte "TEST!",0
 MSG_MAIN_MENUa: .byte "SYSTEM TEST",0
 MSG_MAIN_MENUb: .byte "PRESS 1-4 TO SELECT A TEST ",0
@@ -320,3 +443,10 @@ MSG_RAM_LOOP:   .byte "RAM TEST RUNNING...   (SPACE TO EXIT)",0
 MSG_VIDEO_LOOP: .byte "VIDEO TEST RUNNING... (SPACE TO EXIT)",0
 MSG_SOUND_LOOP: .byte "SOUND TEST RUNNING... (SPACE TO EXIT)",0
 MSG_MISC_LOOP:  .byte "MISC TEST RUNNING...  (SPACE TO EXIT)",0
+MSG_RAM_ADDRESS:.byte "ADDRESS:",0
+MSG_TEST_PASS:  .byte "PASS",0
+MSG_TEST_FAIL:  .byte "FAIL",0
+MSG_RAM_TEST_DONE .byte "RAM TEST FINISHED.", 0
+VALUE  .byte 1
+TEMP   .byte 1
+VALUE_TENS  .byte 1
