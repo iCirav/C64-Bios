@@ -1,0 +1,149 @@
+Mnemonic    Addressing Mode      Bytes   Cycles  Description
+ADC         Immediate           2       2       Add with Carry
+ADC         Zero Page           2       3       Add with Carry
+ADC         Zero Page,X         2       4       Add with Carry
+ADC         Absolute            3       4       Add with Carry
+ADC         Absolute,X          3       4+      Add with Carry (+1 if page crossed)
+ADC         Absolute,Y          3       4+      Add with Carry (+1 if page crossed)
+ADC         (Indirect,X)        2       6       Add with Carry
+ADC         (Indirect),Y        2       5+      Add with Carry (+1 if page crossed)
+AND         Immediate           2       2       Logical AND
+AND         Zero Page           2       3       Logical AND
+AND         Zero Page,X         2       4       Logical AND
+AND         Absolute            3       4       Logical AND
+AND         Absolute,X          3       4+      Logical AND (+1 if page crossed)
+AND         Absolute,Y          3       4+      Logical AND (+1 if page crossed)
+AND         (Indirect,X)        2       6       Logical AND
+AND         (Indirect),Y        2       5+      Logical AND (+1 if page crossed)
+ASL         Accumulator         1       2       Arithmetic Shift Left
+ASL         Zero Page           2       5       Arithmetic Shift Left
+ASL         Zero Page,X         2       6       Arithmetic Shift Left
+ASL         Absolute            3       6       Arithmetic Shift Left
+ASL         Absolute,X          3       7       Arithmetic Shift Left
+BCC         Relative            2       2+      Branch if Carry Clear (+1 if taken, +2 if page crossed)
+BCS         Relative            2       2+      Branch if Carry Set (+1 if taken, +2 if page crossed)
+BEQ         Relative            2       2+      Branch if Equal (Zero set)
+BMI         Relative            2       2+      Branch if Minus
+BNE         Relative            2       2+      Branch if Not Equal
+BPL         Relative            2       2+      Branch if Plus
+BVC         Relative            2       2+      Branch if Overflow Clear
+BVS         Relative            2       2+      Branch if Overflow Set
+CLC         Implied             1       2       Clear Carry Flag
+CLD         Implied             1       2       Clear Decimal Mode
+CLI         Implied             1       2       Clear Interrupt Disable
+CLV         Implied             1       2       Clear Overflow Flag
+CMP         Immediate           2       2       Compare Accumulator
+CMP         Zero Page           2       3       Compare Accumulator
+CMP         Zero Page,X         2       4       Compare Accumulator
+CMP         Absolute            3       4       Compare Accumulator
+CMP         Absolute,X          3       4+      Compare Accumulator (+1 if page crossed)
+CMP         Absolute,Y          3       4+      Compare Accumulator (+1 if page crossed)
+CMP         (Indirect,X)        2       6       Compare Accumulator
+CMP         (Indirect),Y        2       5+      Compare Accumulator (+1 if page crossed)
+CPX         Immediate           2       2       Compare X Register
+CPX         Zero Page           2       3       Compare X Register
+CPX         Absolute            3       4       Compare X Register
+CPY         Immediate           2       2       Compare Y Register
+CPY         Zero Page           2       3       Compare Y Register
+CPY         Absolute            3       4       Compare Y Register
+DEC         Zero Page           2       5       Decrement Memory
+DEC         Zero Page,X         2       6       Decrement Memory
+DEC         Absolute            3       6       Decrement Memory
+DEC         Absolute,X          3       7       Decrement Memory
+DEX         Implied             1       2       Decrement X Register
+DEY         Implied             1       2       Decrement Y Register
+EOR         Immediate           2       2       Exclusive OR with Accumulator
+EOR         Zero Page           2       3       Exclusive OR with Accumulator
+EOR         Zero Page,X         2       4       Exclusive OR with Accumulator
+EOR         Absolute            3       4       Exclusive OR with Accumulator
+EOR         Absolute,X          3       4+      Exclusive OR (+1 if page crossed)
+EOR         Absolute,Y          3       4+      Exclusive OR (+1 if page crossed)
+EOR         (Indirect,X)        2       6       Exclusive OR with Accumulator
+EOR         (Indirect),Y        2       5+      Exclusive OR (+1 if page crossed)
+INC         Zero Page           2       5       Increment Memory
+INC         Zero Page,X         2       6       Increment Memory
+INC         Absolute            3       6       Increment Memory
+INC         Absolute,X          3       7       Increment Memory
+INX         Implied             1       2       Increment X Register
+INY         Implied             1       2       Increment Y Register
+JMP         Absolute            3       3       Jump to Address
+JMP         Indirect            3       5       Jump to Address (Indirect)
+JSR         Absolute            3       6       Jump to Subroutine
+LDA         Immediate           2       2       Load Accumulator
+LDA         Zero Page           2       3       Load Accumulator
+LDA         Zero Page,X         2       4       Load Accumulator
+LDA         Absolute            3       4       Load Accumulator
+LDA         Absolute,X          3       4+      Load Accumulator (+1 if page crossed)
+LDA         Absolute,Y          3       4+      Load Accumulator (+1 if page crossed)
+LDA         (Indirect,X)        2       6       Load Accumulator
+LDA         (Indirect),Y        2       5+      Load Accumulator (+1 if page crossed)
+LDX         Immediate           2       2       Load X Register
+LDX         Zero Page           2       3       Load X Register
+LDX         Zero Page,Y         2       4       Load X Register
+LDX         Absolute            3       4       Load X Register
+LDX         Absolute,Y          3       4+      Load X Register (+1 if page crossed)
+LDY         Immediate           2       2       Load Y Register
+LDY         Zero Page           2       3       Load Y Register
+LDY         Zero Page,X         2       4       Load Y Register
+LDY         Absolute            3       4       Load Y Register
+LDY         Absolute,X          3       4+      Load Y Register (+1 if page crossed)
+LSR         Accumulator         1       2       Logical Shift Right
+LSR         Zero Page           2       5       Logical Shift Right
+LSR         Zero Page,X         2       6       Logical Shift Right
+LSR         Absolute            3       6       Logical Shift Right
+LSR         Absolute,X          3       7       Logical Shift Right
+NOP         Implied             1       2       No Operation
+ORA         Immediate           2       2       Logical Inclusive OR
+ORA         Zero Page           2       3       Logical Inclusive OR
+ORA         Zero Page,X         2       4       Logical Inclusive OR
+ORA         Absolute            3       4       Logical Inclusive OR
+ORA         Absolute,X          3       4+      Logical Inclusive OR (+1 if page crossed)
+ORA         Absolute,Y          3       4+      Logical Inclusive OR (+1 if page crossed)
+ORA         (Indirect,X)        2       6       Logical Inclusive OR
+ORA         (Indirect),Y        2       5+      Logical Inclusive OR (+1 if page crossed)
+PHA         Implied             1       3       Push Accumulator
+PHP         Implied             1       3       Push Processor Status
+PLA         Implied             1       4       Pull Accumulator
+PLP         Implied             1       4       Pull Processor Status
+ROL         Accumulator         1       2       Rotate Left
+ROL         Zero Page           2       5       Rotate Left
+ROL         Zero Page,X         2       6       Rotate Left
+ROL         Absolute            3       6       Rotate Left
+ROL         Absolute,X          3       7       Rotate Left
+ROR         Accumulator         1       2       Rotate Right
+ROR         Zero Page           2       5       Rotate Right
+ROR         Zero Page,X         2       6       Rotate Right
+ROR         Absolute            3       6       Rotate Right
+ROR         Absolute,X          3       7       Rotate Right
+RTI         Implied             1       6       Return from Interrupt
+RTS         Implied             1       6       Return from Subroutine
+SBC         Immediate           2       2       Subtract with Carry
+SBC         Zero Page           2       3       Subtract with Carry
+SBC         Zero Page,X         2       4       Subtract with Carry
+SBC         Absolute            3       4       Subtract with Carry
+SBC         Absolute,X          3       4+      Subtract with Carry (+1 if page crossed)
+SBC         Absolute,Y          3       4+      Subtract with Carry (+1 if page crossed)
+SBC         (Indirect,X)        2       6       Subtract with Carry
+SBC         (Indirect),Y        2       5+      Subtract with Carry (+1 if page crossed)
+SEC         Implied             1       2       Set Carry Flag
+SED         Implied             1       2       Set Decimal Flag
+SEI         Implied             1       2       Set Interrupt Disable
+STA         Zero Page           2       3       Store Accumulator
+STA         Zero Page,X         2       4       Store Accumulator
+STA         Absolute            3       4       Store Accumulator
+STA         Absolute,X          3       5       Store Accumulator
+STA         Absolute,Y          3       5       Store Accumulator
+STA         (Indirect,X)        2       6       Store Accumulator
+STA         (Indirect),Y        2       6       Store Accumulator
+STX         Zero Page           2       3       Store X Register
+STX         Zero Page,Y         2       4       Store X Register
+STX         Absolute            3       4       Store X Register
+STY         Zero Page           2       3       Store Y Register
+STY         Zero Page,X         2       4       Store Y Register
+STY         Absolute            3       4       Store Y Register
+TAX         Implied             1       2       Transfer Accumulator to X
+TAY         Implied             1       2       Transfer Accumulator to Y
+TSX         Implied             1       2       Transfer Stack Pointer to X
+TXA         Implied             1       2       Transfer X to Accumulator
+TXS         Implied             1       2       Transfer X to Stack Pointer
+TYA         Implied             1       2       Transfer Y to Accumulator
